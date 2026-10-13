@@ -10,11 +10,11 @@
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 
-<!-- PDF.js Bibliothek laden -->
+<!-- PDF.js Bibliothek für gestochen scharfes Rendering -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
 <style>
-  /* Interaktives PDF-Booklet */
+  /* Interaktives Booklet für vorbereitete PDF-Doppelseiten */
   .booklet-section {
     margin: 2rem 0 4rem 0;
     width: 100%;
@@ -37,25 +37,39 @@
     max-width: 1100px;
     justify-content: center;
     align-items: center;
-    gap: 0;
   }
-  .booklet-page {
-    flex: 1;
-    width: 50%;
+  .booklet-page-container {
     display: flex;
+    width: 100%;
     justify-content: center;
     align-items: center;
   }
-  .booklet-page canvas {
+  /* Modus für Cover / Rückseite (halbbreit) */
+  .booklet-page-container.single-cover {
+    width: 100%;
+    display: flex;
+  }
+  .booklet-page-container.single-cover .canvas-wrapper {
+    width: 50%;
+  }
+  .booklet-page-container.cover-right {
+    justify-content: flex-end;
+  }
+  .booklet-page-container.cover-left {
+    justify-content: flex-start;
+  }
+  /* Modus für Doppelseiten (vollbreit) */
+  .booklet-page-container.full-spread .canvas-wrapper {
+    width: 100%;
+  }
+
+  .canvas-wrapper canvas {
     width: 100% !important;
     height: auto !important;
-    max-height: 680px;
+    max-height: 720px;
     object-fit: contain;
     display: block;
     box-shadow: 0 6px 18px rgba(0,0,0,0.08);
-  }
-  .booklet-page.empty canvas {
-    display: none;
   }
 
   /* Pfeile Navigation */
@@ -100,7 +114,7 @@
   @media (max-width: 768px) {
     .booklet-viewer {
       padding: 15px 35px;
-      min-height: 280px;
+      min-height: 250px;
     }
     .booklet-arrow {
       width: 36px;
@@ -133,7 +147,7 @@
 </section>
 
 <section class="project-gallery">
-  <!-- Bild 1 und Bild 2 ganz normal oben im zweier Raster -->
+  <!-- Bild 1 und Bild 2 oben im Zweier-Raster -->
   <div class="pg-row cols-2">
     <img src="bilder/shape-of-my-heart-1.jpg" alt="Shape of my Heart Ansicht 1">
     <img src="bilder/shape-of-my-heart-2.jpg" alt="Shape of my Heart Ansicht 2">
@@ -145,13 +159,16 @@
       <button class="booklet-arrow prev-btn" id="bookletPrev" aria-label="Vorherige Seite">&larr;</button>
       
       <div class="booklet-spread">
-        <div class="booklet-page" id="leftPage"><canvas id="leftCanvas"></canvas></div>
-        <div class="booklet-page" id="rightPage"><canvas id="rightCanvas"></canvas></div>
+        <div class="booklet-page-container" id="pageContainer">
+          <div class="canvas-wrapper">
+            <canvas id="pdfCanvas"></canvas>
+          </div>
+        </div>
       </div>
 
       <button class="booklet-arrow next-btn" id="bookletNext" aria-label="Nächste Seite">&rarr;</button>
     </div>
-    <div class="booklet-counter" id="bookletCounter">PDF Booklet wird geladen...</div>
+    <div class="booklet-counter" id="bookletCounter">Booklet wird in HD geladen...</div>
   </div>
 </section>
 
@@ -223,7 +240,7 @@
     <h3>5. Schriftarten (Google Fonts)</h3>
     <p>Zur einheitlichen Darstellung der Schriftart „Quicksand“ lädt diese Website Schriften von Google Fonts, einem Dienst der Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Dabei stellt dein Browser eine Verbindung zu Servern von Google her; dadurch erhält Google Kenntnis davon, dass diese Website mit deiner IP-Adresse aufgerufen wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (Interesse an einer ansprechenden Darstellung des Online-Angebots). Weitere Informationen: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">policies.google.com/privacy</a>.</p>
     <h3>6. Plugins und Social Media</h3>
-    <p>Auf meier Website sind keine aktiven Social-Media-Plugins eingebunden, die automatisch Daten übertragen. Es handelt sich lediglich um einfache externe Links zu Instagram, LinkedIn und WhatsApp. Beim Anklicken verlässt du diese Website, und es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.</p>
+    <p>Auf dieser Website sind keine aktiven Social-Media-Plugins eingebunden, die automatisch Daten übertragen. Es handelt sich lediglich um einfache externe Links zu Instagram, LinkedIn und WhatsApp. Beim Anklicken verlässt du diese Website, und es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.</p>
     <h3>7. Deine Rechte als betroffene Person</h3>
     <p>Du hast jederzeit das Recht auf unentgeltliche Auskunft über deine gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger sowie den Zweck der Datenverarbeitung, sowie ein Recht auf Berichtigung oder Löschung dieser Daten. Wende dich dazu an die oben im Impressum angegebene E-Mail-Adresse.</p>
   </div>
@@ -243,110 +260,82 @@
     else scrollTopBtn.classList.remove('visible');
   });
 
-  /* PDF-Booklet Skript mit PDF.js */
+  /* HD-Rendering für bereits als Doppelseiten angelegte PDFs */
   const pdfUrl = 'bilder/shape-of-my-heart.pdf';
   pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
   let pdfDoc = null;
-  let currentSpread = 0;
-  let spreads = [];
+  let currentPage = 1;
+  let totalPages = 0;
 
-  const leftPageEl = document.getElementById('leftPage');
-  const rightPageEl = document.getElementById('rightPage');
-  const leftCanvas = document.getElementById('leftCanvas');
-  const rightCanvas = document.getElementById('rightCanvas');
+  const pageContainer = document.getElementById('pageContainer');
+  const pdfCanvas = document.getElementById('pdfCanvas');
   const prevBtn = document.getElementById('bookletPrev');
   const nextBtn = document.getElementById('bookletNext');
   const counterEl = document.getElementById('bookletCounter');
 
-  // PDF Laden und Doppelseiten-Raster berechnen
   pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
     pdfDoc = doc;
-    const numPages = pdfDoc.numPages;
-
-    // Erstelle automatisches Booklet-Spread:
-    // Seite 1 -> Rechts (Cover)
-    // Seite 2 & 3 -> Links & Rechts (Doppelseite)
-    // ...
-    // Letzte Seite -> Links (Backcover), falls ungerade
-    spreads.push({ left: null, right: 1 });
-    for (let p = 2; p <= numPages; p += 2) {
-      spreads.push({
-        left: p,
-        right: (p + 1 <= numPages) ? p + 1 : null
-      });
-    }
-
-    renderSpread();
+    totalPages = pdfDoc.numPages;
+    renderPage(currentPage);
   }).catch(err => {
-    counterEl.textContent = "Fehler beim Laden des PDFs. Bitte Stelle sicher, dass bilder/shape-of-my-heart.pdf existiert.";
+    counterEl.textContent = "Fehler beim Laden von bilder/shape-of-my-heart.pdf";
     console.error(err);
   });
 
-  async function renderPageToCanvas(pageNo, canvas) {
-    if (!pageNo) {
-      canvas.style.display = 'none';
-      return;
-    }
-    canvas.style.display = 'block';
-    const page = await pdfDoc.getPage(pageNo);
-    const viewport = page.getViewport({ scale: 1.5 });
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-    const ctx = canvas.getContext('2d');
+  async function renderPage(pageNum) {
+    const page = await pdfDoc.getPage(pageNum);
+    
+    // HD-Auflösung (3.0 Scaling garantiert gestochen scharfe Schriften)
+    const viewport = page.getViewport({ scale: 3.0 });
+    pdfCanvas.height = viewport.height;
+    pdfCanvas.width = viewport.width;
+
+    const ctx = pdfCanvas.getContext('2d');
     await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-  }
 
-  async function renderSpread() {
-    if (!spreads.length) return;
-    const spread = spreads[currentSpread];
-
-    // Linke Seite rendern
-    if (spread.left) {
-      leftPageEl.classList.remove('empty');
-      await renderPageToCanvas(spread.left, leftCanvas);
+    // Layout-Klassen für Einzelseiten (Cover/Backcover) vs. Doppelseiten anpassen
+    pageContainer.className = 'booklet-page-container';
+    
+    if (pageNum === 1) {
+      // PDF-Seite 1 ist das Cover -> rechtsbündig anzeigen
+      pageContainer.classList.add('single-cover', 'cover-right');
+      counterEl.textContent = `Titelbild (Seite 1 von ${totalPages})`;
+    } else if (pageNum === totalPages && totalPages > 1) {
+      // Letzte PDF-Seite ist die Rückseite -> linksbündig anzeigen
+      pageContainer.classList.add('single-cover', 'cover-left');
+      counterEl.textContent = `Rückseite (Seite ${totalPages} von ${totalPages})`;
     } else {
-      leftPageEl.classList.add('empty');
-      renderPageToCanvas(null, leftCanvas);
+      // Alle mittleren PDF-Seiten sind Doppelseiten -> vollbreit anzeigen
+      pageContainer.classList.add('full-spread');
+      counterEl.textContent = `Doppelseite ${pageNum - 1} von ${totalPages - 2}`;
     }
 
-    // Rechte Seite rendern
-    if (spread.right) {
-      rightPageEl.classList.remove('empty');
-      await renderPageToCanvas(spread.right, rightCanvas);
-    } else {
-      rightPageEl.classList.add('empty');
-      renderPageToCanvas(null, rightCanvas);
-    }
-
-    // Navigation-Buttons aktualisieren
-    prevBtn.disabled = (currentSpread === 0);
-    nextBtn.disabled = (currentSpread === spreads.length - 1);
-
-    counterEl.textContent = `Doppelseite ${currentSpread + 1} von ${spreads.length}`;
+    prevBtn.disabled = (currentPage === 1);
+    nextBtn.disabled = (currentPage === totalPages);
   }
 
   prevBtn.addEventListener('click', () => {
-    if (currentSpread > 0) {
-      currentSpread--;
-      renderSpread();
+    if (currentPage > 1) {
+      currentPage--;
+      renderPage(currentPage);
     }
   });
 
   nextBtn.addEventListener('click', () => {
-    if (currentSpread < spreads.length - 1) {
-      currentSpread++;
-      renderSpread();
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderPage(currentPage);
     }
   });
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowLeft' && currentSpread > 0) {
-      currentSpread--;
-      renderSpread();
-    } else if (e.key === 'ArrowRight' && currentSpread < spreads.length - 1) {
-      currentSpread++;
-      renderSpread();
+    if (e.key === 'ArrowLeft' && currentPage > 1) {
+      currentPage--;
+      renderPage(currentPage);
+    } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
+      currentPage++;
+      renderPage(currentPage);
     }
   });
 </script>
