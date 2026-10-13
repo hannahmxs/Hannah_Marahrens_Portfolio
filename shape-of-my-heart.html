@@ -9,27 +9,32 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+
+<!-- PDF.js Bibliothek laden -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+
 <style>
-  /* Interaktives Booklet / Diashow Styling */
+  /* Interaktives PDF-Booklet */
   .booklet-section {
-    margin-top: 2rem;
-    margin-bottom: 3rem;
+    margin: 2rem 0 4rem 0;
+    width: 100%;
   }
   .booklet-viewer {
     position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: #f9f9f9;
+    background: #f8f8f8;
+    border: 1px solid #e5e5e5;
     border-radius: 6px;
-    padding: 20px 60px;
-    box-shadow: inset 0 0 10px rgba(0,0,0,0.03);
-    min-height: 400px;
+    padding: 30px 50px;
+    box-shadow: inset 0 0 15px rgba(0,0,0,0.02);
+    min-height: 480px;
   }
   .booklet-spread {
     display: flex;
     width: 100%;
-    max-width: 900px;
+    max-width: 1100px;
     justify-content: center;
     align-items: center;
     gap: 0;
@@ -41,15 +46,18 @@
     justify-content: center;
     align-items: center;
   }
-  .booklet-page img {
-    width: 100%;
-    height: auto;
+  .booklet-page canvas {
+    width: 100% !important;
+    height: auto !important;
+    max-height: 680px;
+    object-fit: contain;
     display: block;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
   }
-  .booklet-page.empty {
-    visibility: hidden;
+  .booklet-page.empty canvas {
+    display: none;
   }
+
   /* Pfeile Navigation */
   .booklet-arrow {
     position: absolute;
@@ -58,49 +66,49 @@
     background: var(--ink, #111);
     color: #fff;
     border: none;
-    width: 44px;
-    height: 44px;
+    width: 46px;
+    height: 46px;
     border-radius: 50%;
     font-size: 20px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: all 0.2s ease;
     z-index: 10;
     user-select: none;
   }
   .booklet-arrow:hover:not(:disabled) {
-    opacity: 0.8;
-    transform: translateY(-50%) scale(1.05);
+    opacity: 0.85;
+    transform: translateY(-50%) scale(1.08);
   }
   .booklet-arrow:disabled {
-    opacity: 0.2;
+    opacity: 0.15;
     cursor: not-allowed;
   }
   .booklet-arrow.prev-btn { left: 10px; }
   .booklet-arrow.next-btn { right: 10px; }
 
-  /* Seitenanzeige unten */
   .booklet-counter {
     text-align: center;
-    margin-top: 12px;
-    font-size: 0.9rem;
+    margin-top: 16px;
+    font-size: 0.95rem;
     color: #666;
     font-weight: 500;
   }
 
-  @media (max-width: 600px) {
+  @media (max-width: 768px) {
     .booklet-viewer {
-      padding: 15px 45px;
+      padding: 15px 35px;
+      min-height: 280px;
     }
     .booklet-arrow {
       width: 36px;
       height: 36px;
       font-size: 16px;
     }
-    .booklet-arrow.prev-btn { left: 5px; }
-    .booklet-arrow.next-btn { right: 5px; }
+    .booklet-arrow.prev-btn { left: 4px; }
+    .booklet-arrow.next-btn { right: 4px; }
   }
 </style>
 </head>
@@ -125,25 +133,25 @@
 </section>
 
 <section class="project-gallery">
-  <!-- Bild 1 und 2 wie gewohnt oben -->
+  <!-- Bild 1 und Bild 2 ganz normal oben im zweier Raster -->
   <div class="pg-row cols-2">
-    <img src="bilder/shape-of-my-heart-1.jpg" alt="Shape of my Heart Booklet 1">
-    <img src="bilder/shape-of-my-heart-2.jpg" alt="Shape of my Heart Booklet 2">
+    <img src="bilder/shape-of-my-heart-1.jpg" alt="Shape of my Heart Ansicht 1">
+    <img src="bilder/shape-of-my-heart-2.jpg" alt="Shape of my Heart Ansicht 2">
   </div>
 
-  <!-- Interaktives Booklet ab Bild 3 -->
+  <!-- Interaktives PDF-Booklet -->
   <div class="booklet-section">
     <div class="booklet-viewer">
       <button class="booklet-arrow prev-btn" id="bookletPrev" aria-label="Vorherige Seite">&larr;</button>
       
       <div class="booklet-spread">
-        <div class="booklet-page" id="leftPage"></div>
-        <div class="booklet-page" id="rightPage"></div>
+        <div class="booklet-page" id="leftPage"><canvas id="leftCanvas"></canvas></div>
+        <div class="booklet-page" id="rightPage"><canvas id="rightCanvas"></canvas></div>
       </div>
 
       <button class="booklet-arrow next-btn" id="bookletNext" aria-label="Nächste Seite">&rarr;</button>
     </div>
-    <div class="booklet-counter" id="bookletCounter"></div>
+    <div class="booklet-counter" id="bookletCounter">PDF Booklet wird geladen...</div>
   </div>
 </section>
 
@@ -215,7 +223,7 @@
     <h3>5. Schriftarten (Google Fonts)</h3>
     <p>Zur einheitlichen Darstellung der Schriftart „Quicksand“ lädt diese Website Schriften von Google Fonts, einem Dienst der Google Ireland Limited, Gordon House, Barrow Street, Dublin 4, Irland. Dabei stellt dein Browser eine Verbindung zu Servern von Google her; dadurch erhält Google Kenntnis davon, dass diese Website mit deiner IP-Adresse aufgerufen wurde. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO (Interesse an einer ansprechenden Darstellung des Online-Angebots). Weitere Informationen: <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer" style="text-decoration:underline;">policies.google.com/privacy</a>.</p>
     <h3>6. Plugins und Social Media</h3>
-    <p>Auf dieser Website sind keine aktiven Social-Media-Plugins eingebunden, die automatisch Daten übertragen. Es handelt sich lediglich um einfache externe Links zu Instagram, LinkedIn und WhatsApp. Beim Anklicken verlässt du diese Website, und es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.</p>
+    <p>Auf meier Website sind keine aktiven Social-Media-Plugins eingebunden, die automatisch Daten übertragen. Es handelt sich lediglich um einfache externe Links zu Instagram, LinkedIn und WhatsApp. Beim Anklicken verlässt du diese Website, und es gelten die Datenschutzbestimmungen des jeweiligen Anbieters.</p>
     <h3>7. Deine Rechte als betroffene Person</h3>
     <p>Du hast jederzeit das Recht auf unentgeltliche Auskunft über deine gespeicherten personenbezogenen Daten, deren Herkunft und Empfänger sowie den Zweck der Datenverarbeitung, sowie ein Recht auf Berichtigung oder Löschung dieser Daten. Wende dich dazu an die oben im Impressum angegebene E-Mail-Adresse.</p>
   </div>
@@ -235,58 +243,86 @@
     else scrollTopBtn.classList.remove('visible');
   });
 
-  /* Booklet Logik */
-  // Liste aller Einzelbilder für das Booklet (ab Bild 3 bis Bild 7 bzw. beliebig erweiterbar)
-  const bookletImages = [
-    "bilder/shape-of-my-heart-3.jpg",
-    "bilder/shape-of-my-heart-4.jpg",
-    "bilder/shape-of-my-heart-5.jpg",
-    "bilder/shape-of-my-heart-6.jpg",
-    "bilder/shape-of-my-heart-7.jpg"
-  ];
+  /* PDF-Booklet Skript mit PDF.js */
+  const pdfUrl = 'bilder/shape-of-my-heart.pdf';
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-  // Definition der Doppelseiten (Spreads):
-  // null = leeres Feld (für Cover rechts / Backcover links)
-  const spreads = [
-    { left: null, right: bookletImages[0] }, // Cover auf der rechten Seite
-    { left: bookletImages[1], right: bookletImages[2] }, // Doppelseite 1
-    { left: bookletImages[3], right: bookletImages[4] }  // Wenn ungerade Anzahl: Letztes Bild auf der linken Seite
-  ];
-
+  let pdfDoc = null;
   let currentSpread = 0;
+  let spreads = [];
 
   const leftPageEl = document.getElementById('leftPage');
   const rightPageEl = document.getElementById('rightPage');
+  const leftCanvas = document.getElementById('leftCanvas');
+  const rightCanvas = document.getElementById('rightCanvas');
   const prevBtn = document.getElementById('bookletPrev');
   const nextBtn = document.getElementById('bookletNext');
   const counterEl = document.getElementById('bookletCounter');
 
-  function renderSpread() {
+  // PDF Laden und Doppelseiten-Raster berechnen
+  pdfjsLib.getDocument(pdfUrl).promise.then(doc => {
+    pdfDoc = doc;
+    const numPages = pdfDoc.numPages;
+
+    // Erstelle automatisches Booklet-Spread:
+    // Seite 1 -> Rechts (Cover)
+    // Seite 2 & 3 -> Links & Rechts (Doppelseite)
+    // ...
+    // Letzte Seite -> Links (Backcover), falls ungerade
+    spreads.push({ left: null, right: 1 });
+    for (let p = 2; p <= numPages; p += 2) {
+      spreads.push({
+        left: p,
+        right: (p + 1 <= numPages) ? p + 1 : null
+      });
+    }
+
+    renderSpread();
+  }).catch(err => {
+    counterEl.textContent = "Fehler beim Laden des PDFs. Bitte Stelle sicher, dass bilder/shape-of-my-heart.pdf existiert.";
+    console.error(err);
+  });
+
+  async function renderPageToCanvas(pageNo, canvas) {
+    if (!pageNo) {
+      canvas.style.display = 'none';
+      return;
+    }
+    canvas.style.display = 'block';
+    const page = await pdfDoc.getPage(pageNo);
+    const viewport = page.getViewport({ scale: 1.5 });
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    const ctx = canvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
+  }
+
+  async function renderSpread() {
+    if (!spreads.length) return;
     const spread = spreads[currentSpread];
 
-    // Linke Seite render
+    // Linke Seite rendern
     if (spread.left) {
-      leftPageEl.innerHTML = `<img src="${spread.left}" alt="Booklet Seite">`;
       leftPageEl.classList.remove('empty');
+      await renderPageToCanvas(spread.left, leftCanvas);
     } else {
-      leftPageEl.innerHTML = '';
       leftPageEl.classList.add('empty');
+      renderPageToCanvas(null, leftCanvas);
     }
 
-    // Rechte Seite render
+    // Rechte Seite rendern
     if (spread.right) {
-      rightPageEl.innerHTML = `<img src="${spread.right}" alt="Booklet Seite">`;
       rightPageEl.classList.remove('empty');
+      await renderPageToCanvas(spread.right, rightCanvas);
     } else {
-      rightPageEl.innerHTML = '';
       rightPageEl.classList.add('empty');
+      renderPageToCanvas(null, rightCanvas);
     }
 
-    // Buttons aktivieren/deaktivieren
+    // Navigation-Buttons aktualisieren
     prevBtn.disabled = (currentSpread === 0);
     nextBtn.disabled = (currentSpread === spreads.length - 1);
 
-    // Seitenzahlen-Anzeige
     counterEl.textContent = `Doppelseite ${currentSpread + 1} von ${spreads.length}`;
   }
 
@@ -304,7 +340,6 @@
     }
   });
 
-  // Tastatur Pfeiltasten-Steuerung
   document.addEventListener('keydown', (e) => {
     if (e.key === 'ArrowLeft' && currentSpread > 0) {
       currentSpread--;
@@ -314,9 +349,6 @@
       renderSpread();
     }
   });
-
-  // Initiales Laden
-  renderSpread();
 </script>
 
 </body>
