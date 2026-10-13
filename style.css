@@ -306,12 +306,17 @@ footer {
   color: var(--ink);
 }
 
-/* ---------- PROJEKT-UNTERSEITEN ---------- */
-.project-intro { padding: 4rem 0 2.5rem; max-width: 800px; margin: 0 auto; }
+/* ---------- PROJEKT-UNTERSEITEN (Einheitliches Raster) ---------- */
+.project-intro { 
+  padding: 4rem 2rem 2.5rem; 
+  max-width: 1200px; 
+  margin: 0 auto; 
+}
 .project-intro .back-link { display: inline-block; margin-bottom: 1.4rem; font-size: 0.9rem; color: var(--muted); }
 .project-intro .back-link:hover { color: var(--ink); }
 .project-intro h1 { font-size: 2.3rem; margin-bottom: 1.1rem; }
-.project-intro p { font-size: 1.05rem; color: var(--ink); margin: 0 0 1.3rem; }
+.project-intro p { font-size: 1.05rem; color: var(--ink); margin: 0 0 1.3rem; max-width: 800px; }
+
 .project-gallery { max-width: 1200px; margin: 0 auto; padding: 0 2rem 3rem; }
 .project-gallery img { width: 100%; object-fit: cover; }
 .pg-row { display: grid; gap: 0.9rem; margin-bottom: 0.9rem; }
@@ -326,7 +331,7 @@ footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  max-width: 980px;
+  max-width: 1200px;
   margin: 0 auto;
   padding: 0 2rem 4rem;
   gap: 1rem;
@@ -342,6 +347,7 @@ footer {
 .project-nav a.next { text-align: right; align-items: flex-end; }
 .project-nav .nav-label { font-size: 0.75rem; color: var(--muted); margin-bottom: 0.2rem; }
 .project-nav a:hover .nav-label { color: var(--ink); }
+}
 
 /* ---------- MOBILE ---------- */
 @media (max-width: 760px) {
