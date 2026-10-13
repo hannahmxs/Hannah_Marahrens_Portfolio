@@ -25,10 +25,10 @@
     align-items: center;
     justify-content: center;
     background: #f8f8f8;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
+    border: none;
+    border-radius: 0;
     padding: 30px 50px;
-    box-shadow: inset 0 0 15px rgba(0,0,0,0.02);
+    box-shadow: none;
     min-height: 480px;
   }
   .booklet-spread {
@@ -103,12 +103,14 @@
   .booklet-arrow.prev-btn { left: 10px; }
   .booklet-arrow.next-btn { right: 10px; }
 
+  /* Dezentere Seitenzahlen-Anzeige */
   .booklet-counter {
     text-align: center;
-    margin-top: 16px;
-    font-size: 0.95rem;
-    color: #666;
-    font-weight: 500;
+    margin-top: 20px;
+    font-size: 0.82rem;
+    color: #999;
+    font-weight: 400;
+    letter-spacing: 0.03em;
   }
 
   @media (max-width: 768px) {
@@ -168,7 +170,7 @@
 
       <button class="booklet-arrow next-btn" id="bookletNext" aria-label="Nächste Seite">&rarr;</button>
     </div>
-    <div class="booklet-counter" id="bookletCounter">Booklet wird in HD geladen...</div>
+    <div class="booklet-counter" id="bookletCounter">Booklet wird geladen...</div>
   </div>
 </section>
 
@@ -286,7 +288,7 @@
   async function renderPage(pageNum) {
     const page = await pdfDoc.getPage(pageNum);
     
-    // HD-Auflösung (3.0 Scaling garantiert gestochen scharfe Schriften)
+    // HD-Auflösung
     const viewport = page.getViewport({ scale: 3.0 });
     pdfCanvas.height = viewport.height;
     pdfCanvas.width = viewport.width;
@@ -294,19 +296,15 @@
     const ctx = pdfCanvas.getContext('2d');
     await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
-    // Layout-Klassen für Einzelseiten (Cover/Backcover) vs. Doppelseiten anpassen
     pageContainer.className = 'booklet-page-container';
     
     if (pageNum === 1) {
-      // PDF-Seite 1 ist das Cover -> rechtsbündig anzeigen
       pageContainer.classList.add('single-cover', 'cover-right');
       counterEl.textContent = `Titelbild (Seite 1 von ${totalPages})`;
     } else if (pageNum === totalPages && totalPages > 1) {
-      // Letzte PDF-Seite ist die Rückseite -> linksbündig anzeigen
       pageContainer.classList.add('single-cover', 'cover-left');
       counterEl.textContent = `Rückseite (Seite ${totalPages} von ${totalPages})`;
     } else {
-      // Alle mittleren PDF-Seiten sind Doppelseiten -> vollbreit anzeigen
       pageContainer.classList.add('full-spread');
       counterEl.textContent = `Doppelseite ${pageNum - 1} von ${totalPages - 2}`;
     }
