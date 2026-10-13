@@ -9,22 +9,28 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+
 <style>
-  /* Perfekte Höhenausrichtung für Reihe 2 */
+  /* Exakte Höhenanpassung für Reihe 2 */
   .pg-row-equal {
     display: flex;
     gap: 20px;
     align-items: stretch;
   }
-  .pg-row-equal > .pg-col-left {
+  .pg-col-left-crop {
     flex: 1;
     width: 50%;
+    position: relative;
+    overflow: hidden; /* Schneidet alles ab, was unten übersteht */
   }
-  .pg-row-equal > .pg-col-left img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover; /* Schneidet das Bild unten bündig ab */
-    display: block;
+  .pg-col-left-crop img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: top center !important;
   }
   .pg-col-stack {
     flex: 1;
@@ -73,9 +79,9 @@
     <img src="bilder/acryl-5.jpg" alt="Acryl Malerei 5">
   </div>
 
- <!-- Neue Reihe 2: acryl-6 passt sich automatisch der Gesamthöhe von 7 + 8 an -->
+ <!-- Reihe 2 (acryl-6 wird unten exakt bündig zu acryl-8 abgeschnitten) -->
   <div class="pg-row cols-2 pg-row-equal">
-    <div class="pg-col-left">
+    <div class="pg-col-left-crop">
       <img src="bilder/acryl-6.jpg" alt="Acryl Malerei 6">
     </div>
     <div class="pg-col-stack">
