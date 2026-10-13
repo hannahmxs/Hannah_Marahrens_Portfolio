@@ -9,6 +9,18 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
+<style>
+  /* Zusatz für die zweigeteilte rechte Spalte in Reihe 2 */
+  .pg-col-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; /* Gleicher Abstand wie in der übrigen Galerie */
+  }
+  .pg-col-stack img {
+    width: 100%;
+    height: auto;
+  }
+</style>
 </head>
 <body>
 
@@ -30,10 +42,32 @@
 </section>
 
 <section class="project-gallery">
+  <!-- Die ersten 3 Bilder (Selbstporträt-Serie) -->
   <div class="pg-row cols-3">
     <img src="bilder/acryl-1.jpg" alt="Acryl Malerei 1">
     <img src="bilder/acryl-2.jpg" alt="Acryl Malerei 2">
     <img src="bilder/acryl-3.jpg" alt="Acryl Malerei 3">
+  </div>
+
+  <!-- Neue Reihe 1 (Acryl 4 & Acryl 5) -->
+  <div class="pg-row cols-2">
+    <img src="bilder/acryl-4.jpg" alt="Acryl Malerei 4">
+    <img src="bilder/acryl-5.jpg" alt="Acryl Malerei 5">
+  </div>
+
+  <!-- Neue Reihe 2 (Acryl 6 links, Acryl 7 & 8 übereinander rechts) -->
+  <div class="pg-row cols-2">
+    <img src="bilder/acryl-6.jpg" alt="Acryl Malerei 6">
+    <div class="pg-col-stack">
+      <img src="bilder/acryl-7.jpg" alt="Acryl Malerei 7">
+      <img src="bilder/acryl-8.jpg" alt="Acryl Malerei 8">
+    </div>
+  </div>
+
+  <!-- Neue Reihe 3 (Acryl 9 & Acryl 10) -->
+  <div class="pg-row cols-2">
+    <img src="bilder/acryl-9.jpg" alt="Acryl Malerei 9">
+    <img src="bilder/acryl-10.jpg" alt="Acryl Malerei 10">
   </div>
 </section>
 
